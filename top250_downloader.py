@@ -14,37 +14,33 @@ from bs4 import BeautifulSoup
 import csv
 
 
-def webpage_to_csv(url, csv_output_filename):
+def webtable_to_csv(url, csv_output_filename, table_num=1):
 
     r = requests.get(url)
     doc = r.text
     soup = BeautifulSoup(doc)
 
-    table = soup.find('table')
-
-        
-
-    #rows = table.findAll('tr') #findAll returns a list
-    #for tr in rows:
-    #    cols = tr.findAll('td')
-    #    for c in cols:
-    #        print c.text,
-    #    print 
-
-    with open(csv_output_filename, 'w') as f:
-        csvwriter = csv.writer(f)
-
-        header_row = table.find('tr', attrs={'class': 'row_header'})
-        hdrs = [h.text.encode('utf-8') for h in header_row.findAll('th')]
-        csvwriter.writerow(hdrs)
-
-        for row in table.findAll('tr'):
-            cells = [c.text.encode('utf-8') for c in row.findAll('td')]
-            csvwriter.writerow(cells)
-    print("wrote to csv", csv_output_filename)            
+    tables = soup.find('body').find_all('table')
+    print "Total of ", len(tables), "tables"
+    #table = soup.find('table')
+    table = soup.findAll('table')[table_num-1]
+    
+    def write_table_to_file(table, csv_output_filename):
+        with open(csv_output_filename, 'wb') as fp:
+            csvwriter = csv.writer(fp, delimiter=',')
+    
+            header_row = table.find('tr', attrs={'class': 'row_header'})
+            hdrs = [h.text.encode('utf-8') for h in header_row.findAll('th')]
+            csvwriter.writerow(hdrs)
+            
+            for row in table.findAll('tr'):
+                cells = [c.text.encode('utf-8') for c in row.findAll('td')]
+                csvwriter.writerow(cells)
+                
+        print("wrote to csv", csv_output_filename)            
 
 
-
+    write_table_to_file(table, csv_output_filename)
 
 
 if __name__ == '__main__':
@@ -54,11 +50,15 @@ if __name__ == '__main__':
 
     PROD_YEARS = "http://top250.info/stats/?8"
     csv_output_filename = 'data/PROD_YEARS.csv'
+    
+    CURRENT_250 = "http://top250.info/charts/"
+    csv_output_filename = 'data/current_top250.csv'
+    table_num =2
 
-    current_url = PROD_YEARS
+    current_url = CURRENT_250
 
     #create a list of all the URLs to be downloaded...
-    webpage_to_csv(current_url, csv_output_filename)
+    webtable_to_csv(current_url, csv_output_filename, table_num)
 
     print("Done")
 
