@@ -7,10 +7,10 @@
 #-------------------------------------------------------------------------------
 import requests
 import re
-import sys, os
+import os
 from bs4 import BeautifulSoup
 import pandas as pd
-
+import utils
 
 def clean_text(text):
     """
@@ -19,11 +19,6 @@ def clean_text(text):
     #print repr(text), type(text)
     return(re.sub('[\n(){}<> %]', '', text))
 
-def get_text_inside_parenthesis(s):
-    """
-    Returns text within parenthesis
-    """    
-    return(s[s.find("(")+1:s.find(")")])
 
 
 def construct_valid_movie_url(rt_BASE, rt_search_BASE, movie_name, movie_year):
@@ -98,16 +93,21 @@ if __name__ == '__main__':
     csv_filename = os.path.join(data_dir,filename)
     imdb_ratings = pd.read_csv(csv_filename)
     
+    
     for index, row in imdb_ratings.iloc[20:50].iterrows():    
         movie_name = row['Title']
-        movie_year = get_text_inside_parenthesis(movie_name)    
+        print movie_name
+        movie_year = int(row['Year'])    
         movie_name = re.sub(r'\(.*?\)', "", movie_name) #get rid of the year
+        print movie_year, movie_name
         rt_url = construct_valid_movie_url(rt_BASE, search_BASE, movie_name, movie_year)   
         if rt_url is not None:
             ratings = get_rt_ratings(rt_url)
             print movie_name, movie_year, ratings[0], ratings[1]
         else:
             print "!!!   Unable to find URL for", movie_name, movie_year
+
+#TODO: write to CSV file
             
     print("Done")
 
